@@ -1,6 +1,7 @@
 // this implements the host-specific API utils & callbacks for emscripten
 
 #pragma once
+#include <stdio.h>
 
 // implement these memory-helpers for each host
 
@@ -40,6 +41,11 @@ EM_JS(u32, cart_strlen, (u32 cartPtr), {
 
 // called on web-side JS to load cart into MOdule and expose host-functions to it
 EM_ASYNC_JS(bool, wasm_host_load_wasm, (unsigned char* wasmBytesPtr, uint32_t wasmBytesLen), {
+  if (!Module.canvas) {
+    console.error("canvas is not set.");
+    return false;
+  }
+
   const wasmBytes = Module.HEAPU8.slice(wasmBytesPtr, wasmBytesPtr+wasmBytesLen);
   const d = new TextDecoder();
   const importObject = {
@@ -61,15 +67,27 @@ EM_ASYNC_JS(bool, wasm_host_load_wasm, (unsigned char* wasmBytesPtr, uint32_t wa
     Module.cart.load();
   }
 
+  Module.ctx = Module.canvas.getContext("2d");
+  Module.screenBuffer = Module.ctx.getImageData(0, 0, 640, 480);
+  Module.canvas.width = 640;
+  Module.canvas.height = 480;
+
   return true;
 });
 
 // called on each frame
-EM_JS(void, wasm_host_update, (), {
+EM_JS(void, em_wasm_host_update, (pntr_color* screenBuffer), {
   if ( Module?.cart?.update){
     Module.cart.update(BigInt(Date.now()));
   }
+  Module.screenBuffer.data.set(Module.HEAPU8.slice(screenBuffer, 640*480*4));
+  Module.ctx.putImageData(Module.screenBuffer, 0, 0);
 })
+
+
+void wasm_host_update() {
+  em_wasm_host_update(screen->data);
+}
 
 
 // called when cart is unloaded

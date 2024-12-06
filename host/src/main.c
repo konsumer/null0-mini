@@ -1,9 +1,17 @@
 // host implementations for emscripten/wamr
 
-#include "host.h"
+#ifdef EMSCRIPTEN
+#define PNTR_PIXELFORMAT_RGBA
+#else
+#define PNTR_PIXELFORMAT_ARGB
+#endif
 
-// set this to false to stop
-bool keepRunning = true;
+#define PNTR_IMPLEMENTATION
+#include "pntr.h"
+
+pntr_image* screen;
+
+#include "host.h"
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -29,14 +37,24 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  // printf("loaded: %s\n", cartFilename);
+  screen = pntr_new_image(640, 480);
+
+  pntr_draw_circle_fill(screen, 100, 100, 80, PNTR_RED);
+  pntr_draw_circle_fill(screen, 200, 100, 80, PNTR_GREEN);
+  pntr_draw_circle_fill(screen, 300, 100, 80, PNTR_BLUE);
 
   #ifdef EMSCRIPTEN
     emscripten_set_main_loop(wasm_host_update, 60, false);
   #else
-    while(keepRunning) {
-      wasm_host_update();
-      sleep(0.016f); // ~60fps
+    #include <MiniFB.h>
+    struct mfb_window* null0_window = mfb_open("null0", 640, 480);
+    while(null0_window) {
+      if (mfb_update_ex(null0_window, screen->data, 640, 480 ) != STATE_OK) {
+        null0_window = NULL;
+      } else {
+        wasm_host_update();
+        mfb_wait_sync(null0_window);
+      }
     }
   #endif
 
