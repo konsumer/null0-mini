@@ -40,11 +40,16 @@ EM_JS(u32, cart_strlen, (u32 cartPtr), {
 // implement these callbacks for each host
 
 // called on web-side JS to load cart into MOdule and expose host-functions to it
-EM_ASYNC_JS(bool, wasm_host_load_wasm, (unsigned char* wasmBytesPtr, uint32_t wasmBytesLen), {
+EM_JS(bool, wasm_host_load_wasm, (unsigned char* wasmBytesPtr, uint32_t wasmBytesLen), {
   if (!Module.canvas) {
     console.error("canvas is not set.");
     return false;
   }
+
+  Module.ctx = Module.canvas.getContext("2d");
+  Module.screenBuffer = Module.ctx.getImageData(0, 0, 640, 480);
+  Module.canvas.width = 640;
+  Module.canvas.height = 480;
 
   const wasmBytes = Module.HEAPU8.slice(wasmBytesPtr, wasmBytesPtr+wasmBytesLen);
   const d = new TextDecoder();
@@ -60,17 +65,13 @@ EM_ASYNC_JS(bool, wasm_host_load_wasm, (unsigned char* wasmBytesPtr, uint32_t wa
     }
   }
 
-  const { instance: { exports } } = await WebAssembly.instantiate(wasmBytes, importObject);
-  Module.cart = exports;
-  Module.wasi1_instance.start(Module.cart);
-  if (Module.cart.load) {
-    Module.cart.load();
-  }
-
-  Module.ctx = Module.canvas.getContext("2d");
-  Module.screenBuffer = Module.ctx.getImageData(0, 0, 640, 480);
-  Module.canvas.width = 640;
-  Module.canvas.height = 480;
+  WebAssembly.instantiate(wasmBytes, importObject).then(function({instance: { exports }}){
+    Module.cart = exports;
+    Module.wasi1_instance.start(Module.cart);
+    if (Module.cart.load) {
+      Module.cart.load();
+    }
+  });
 
   return true;
 });

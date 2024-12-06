@@ -39,10 +39,6 @@ int main(int argc, char *argv[]) {
 
   screen = pntr_new_image(640, 480);
 
-  pntr_draw_circle_fill(screen, 100, 100, 80, PNTR_RED);
-  pntr_draw_circle_fill(screen, 200, 100, 80, PNTR_GREEN);
-  pntr_draw_circle_fill(screen, 300, 100, 80, PNTR_BLUE);
-
   #ifdef EMSCRIPTEN
     emscripten_set_main_loop(wasm_host_update, 60, false);
   #else

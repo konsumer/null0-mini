@@ -62,3 +62,4 @@ endfunction()
 
 BUILD_C_CART(runtests)
 BUILD_AS_CART(runtests)
+BUILD_C_CART(graphics)

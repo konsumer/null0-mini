@@ -73,3 +73,12 @@ HOST_FUNCTION(u32, test_struct_out, (), {
   return copy_to_cart(&result, sizeof(result));
 })
 
+HOST_FUNCTION(void, clear, (u32 colorPtr), {
+  pntr_color* color = copy_from_cart(colorPtr, sizeof(pntr_color));
+  pntr_clear_background(screen, *color);
+})
+
+HOST_FUNCTION(void, draw_circle, (u32 centerX, u32 centerY, u32 radius, u32 colorPtr), {
+  pntr_color* color =  copy_from_cart(colorPtr, sizeof(pntr_color));
+  pntr_draw_circle_fill(screen, centerX, centerY, radius, *color);
+})
