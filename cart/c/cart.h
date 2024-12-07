@@ -39,6 +39,7 @@ typedef struct {
 
 typedef unsigned int u32;
 typedef int i32;
+typedef float f32;
 
 #define LIGHTGRAY  0xC8C8C8FF  // (200, 200, 200, 255)
 #define GRAY       0x828282FF  // (130, 130, 130, 255)
@@ -67,9 +68,22 @@ typedef int i32;
 #define MAGENTA    0xFF00FFFF  // (255, 0, 255, 255)
 #define RAYWHITE   0xF5F5F5FF  // (245, 245, 245, 255)
 
-HOST_FUNCTION(void, trace, (char* string))
-HOST_FUNCTION(void, draw_circle, (u32 centerX, u32 centerY, u32 radius, u32 color))
+// TODO: these were added by hand
+
 HOST_FUNCTION(void, clear, (u32 color))
-HOST_FUNCTION(void, draw_image_tint, (u32 src, i32 posX, i32 posY, u32 tint))
-HOST_FUNCTION(u32, new_image, (i32 width, i32 height, u32 color))
+HOST_FUNCTION(void, draw_circle, (u32 centerX, u32 centerY, u32 radius, u32 color))
 HOST_FUNCTION(void, draw_circle_on_image, (u32 destination, i32 centerX, i32 centerY, i32 radius, u32 color))
+HOST_FUNCTION(void, draw_ellipse, (i32 centerX, i32 centerY, i32 radiusX, i32 radiusY, u32 color))
+HOST_FUNCTION(void, draw_ellipse_on_image, (u32 destination, i32 centerX, i32 centerY, i32 radiusX, i32 radiusY, u32 color))
+HOST_FUNCTION(void, draw_image, (u32 src, i32 posX, i32 posY))
+HOST_FUNCTION(void, draw_image_tint, (u32 src, i32 posX, i32 posY, u32 tint))
+HOST_FUNCTION(void, draw_line, (i32 startPosX, i32 startPosY, i32 endPosX, i32 endPosY, u32 color))
+HOST_FUNCTION(void, draw_line_on_image, (u32 destination, i32 startPosX, i32 startPosY, i32 endPosX, i32 endPosY, u32 color))
+HOST_FUNCTION(void, draw_rectangle, (i32 posX, i32 posY, i32 width, i32 height, u32 color))
+HOST_FUNCTION(void, draw_rectangle_on_image, (u32 destination, i32 posX, i32 posY, i32 width, i32 height, u32 color))
+HOST_FUNCTION(void, draw_text, (u32 font, char* text, i32 posX, i32 posY, u32 color))
+HOST_FUNCTION(void, draw_text_on_image, (u32 destination, u32 font, char* text, i32 posX, i32 posY, u32 color))
+HOST_FUNCTION(f32, get_fps, ())
+HOST_FUNCTION(u32, load_image, (char* filenamePtr))
+HOST_FUNCTION(u32, new_image, (i32 width, i32 height, u32 color))
+HOST_FUNCTION(void, trace, (char* string))

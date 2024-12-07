@@ -8,6 +8,14 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
+
+// get current unix-time in ms
+uint64_t null0_millis() {
+  struct timespec now;
+  timespec_get(&now, TIME_UTC);
+  return now.tv_sec * 1000 + now.tv_nsec / 1000000;
+}
 
 // simplified type-names
 typedef uint8_t u8;

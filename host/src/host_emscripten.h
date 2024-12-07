@@ -42,8 +42,8 @@ EM_JS(u32, cart_strlen, (u32 cartPtr), {
 // called on web-side JS to load cart into MOdule and expose host-functions to it
 EM_JS(bool, em_wasm_host_load_wasm, (unsigned char* wasmBytesPtr, uint32_t wasmBytesLen, u32 width, u32 height), {
   if (!Module.canvas) {
-    console.error("canvas is not set.");
-    return false;
+    Module.canvas = document.getElementById("canvas");
+    document.body.appendChild(Module.canvas);
   }
 
   Module.canvas.width = width;

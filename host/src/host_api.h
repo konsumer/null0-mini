@@ -137,19 +137,19 @@ HOST_FUNCTION(void, draw_line, (i32 startPosX, i32 startPosY, i32 endPosX, i32 e
 // Draw a filled rectangle on the screen
 HOST_FUNCTION(void, draw_rectangle, (i32 posX, i32 posY, i32 width, i32 height, u32 colorPtr), {
   pntr_color color = get_pntr_color_from_cart(colorPtr);
-  pntr_draw_rectangle(screen, posX, posY, width, height, color);
+  pntr_draw_rectangle_fill(screen, posX, posY, width, height, color);
 })
 
 // Draw a filled triangle on the screen
 HOST_FUNCTION(void, draw_triangle, (i32 x1, i32 y1, i32 x2, i32 y2, i32 x3, i32 y3, u32 colorPtr), {
   pntr_color color = get_pntr_color_from_cart(colorPtr);
-  pntr_draw_triangle(screen, x1, y1, x2, y2, x3, y3, color);
+  pntr_draw_triangle_fill(screen, x1, y1, x2, y2, x3, y3, color);
 })
 
 // Draw a filled ellipse on the screen
 HOST_FUNCTION(void, draw_ellipse, (i32 centerX, i32 centerY, i32 radiusX, i32 radiusY, u32 colorPtr), {
   pntr_color color = get_pntr_color_from_cart(colorPtr);
-  pntr_draw_ellipse(screen, centerX, centerY, radiusX, radiusY, color);
+  pntr_draw_ellipse_fill(screen, centerX, centerY, radiusX, radiusY, color);
 })
 
 // Draw a filled circle on the screen
@@ -266,9 +266,32 @@ HOST_FUNCTION(u32, font_copy, (u32 fontPtr), {
 })
 
 // Get the current FPS
-HOST_FUNCTION(u32, get_fps, (), {
-  // TODO
-  return 0;
+HOST_FUNCTION(f32, get_fps, (), {
+  static uint64_t previous_time = 0;
+  static float fps = 0.0f;
+  static int frame_count = 0;
+  static uint64_t fps_update_time = 0;
+  
+  uint64_t current_time = null0_millis();
+  
+  // Initialize on first call
+  if (previous_time == 0) {
+      previous_time = current_time;
+      fps_update_time = current_time;
+      return 0.0f;
+  }
+  
+  frame_count++;
+  
+  // Update FPS every 500ms
+  if (current_time - fps_update_time >= 500) {
+      fps = frame_count * 1000.0f / (current_time - fps_update_time);
+      fps_update_time = current_time;
+      frame_count = 0;
+  }
+  
+  previous_time = current_time;
+  return fps;
 })
 
 // Scale a font, return a new font
@@ -409,19 +432,19 @@ HOST_FUNCTION(void, draw_line_on_image, (u32 destinationPtr, i32 startPosX, i32 
 // Draw a filled rectangle on an image
 HOST_FUNCTION(void, draw_rectangle_on_image, (u32 destinationPtr, i32 posX, i32 posY, i32 width, i32 height, u32 colorPtr), {
   pntr_color color = get_pntr_color_from_cart(colorPtr);
-  pntr_draw_rectangle(images[destinationPtr], posX, posY, width, height, color);
+  pntr_draw_rectangle_fill(images[destinationPtr], posX, posY, width, height, color);
 })
 
 // Draw a filled triangle on an image
 HOST_FUNCTION(void, draw_triangle_on_image, (u32 destinationPtr, i32 x1, i32 y1, i32 x2, i32 y2, i32 x3, i32 y3, u32 colorPtr), {
   pntr_color color = get_pntr_color_from_cart(colorPtr);
-  pntr_draw_triangle(images[destinationPtr], x1, y1, x2, y2, x3, y3, color);
+  pntr_draw_triangle_fill(images[destinationPtr], x1, y1, x2, y2, x3, y3, color);
 })
 
 // Draw a filled ellipse on an image
 HOST_FUNCTION(void, draw_ellipse_on_image, (u32 destinationPtr, i32 centerX, i32 centerY, i32 radiusX, i32 radiusY, u32 colorPtr), {
   pntr_color color = get_pntr_color_from_cart(colorPtr);
-  pntr_draw_ellipse(images[destinationPtr], centerX, centerY, radiusX, radiusY, color);
+  pntr_draw_ellipse_fill(images[destinationPtr], centerX, centerY, radiusX, radiusY, color);
 })
 
 // Draw a circle on an image

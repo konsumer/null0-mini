@@ -2,15 +2,6 @@
 
 #pragma once
 
-#include <time.h>
-
-// get current unix-time in ms
-uint64_t null0_millis() {
-  struct timespec now;
-  timespec_get(&now, TIME_UTC);
-  return now.tv_sec * 1000 + now.tv_nsec / 1000000;
-}
-
 cvector_vector_type(NativeSymbol) null0_native_symbols = NULL;
 
 static wasm_function_inst_t cart_update = NULL;

@@ -261,7 +261,7 @@ font_scale:
 
 get_fps:
   args: {}
-  returns: u32
+  returns: f32
   description: Get the current FPS
 
 load_font_bmf:
