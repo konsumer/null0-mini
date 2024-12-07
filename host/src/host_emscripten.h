@@ -40,16 +40,16 @@ EM_JS(u32, cart_strlen, (u32 cartPtr), {
 // implement these callbacks for each host
 
 // called on web-side JS to load cart into MOdule and expose host-functions to it
-EM_JS(bool, wasm_host_load_wasm, (unsigned char* wasmBytesPtr, uint32_t wasmBytesLen), {
+EM_JS(bool, em_wasm_host_load_wasm, (unsigned char* wasmBytesPtr, uint32_t wasmBytesLen, u32 width, u32 height), {
   if (!Module.canvas) {
     console.error("canvas is not set.");
     return false;
   }
 
+  Module.canvas.width = width;
+  Module.canvas.height = height;
   Module.ctx = Module.canvas.getContext("2d");
-  Module.screenBuffer = Module.ctx.getImageData(0, 0, 640, 480);
-  Module.canvas.width = 640;
-  Module.canvas.height = 480;
+  Module.screenBuffer = Module.ctx.getImageData(0, 0, Module.canvas.width, Module.canvas.height);
 
   const wasmBytes = Module.HEAPU8.slice(wasmBytesPtr, wasmBytesPtr+wasmBytesLen);
   const d = new TextDecoder();
@@ -81,9 +81,13 @@ EM_JS(void, em_wasm_host_update, (pntr_color* screenBuffer), {
   if ( Module?.cart?.update){
     Module.cart.update(BigInt(Date.now()));
   }
-  Module.screenBuffer.data.set(Module.HEAPU8.slice(screenBuffer, 640*480*4));
+  Module.screenBuffer.data.set(Module.HEAPU8.slice(screenBuffer, Module.canvas.width*Module.canvas.height*4));
   Module.ctx.putImageData(Module.screenBuffer, 0, 0);
 })
+
+bool wasm_host_load_wasm(unsigned char* wasmBytesPtr, uint32_t wasmBytesLen) {
+  return em_wasm_host_load_wasm(wasmBytesPtr, wasmBytesLen, SCREEN_WIDTH, SCREEN_HEIGHT);
+}
 
 
 void wasm_host_update() {

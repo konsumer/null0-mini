@@ -1,23 +1,27 @@
+#!/usr/bin/env node
+
 // this will stub host, based on your api yaml files
 import { readFile } from 'fs/promises'
+import { basename } from 'path'
 import YAML from 'yaml'
-import { glob } from 'glob'
+
+const [,progname, yamlfile] = process.argv
+if (!yamlfile) {
+  console.error(`Usage: ${basename(progname)} <YAML_FILE>`)
+  process.exit(1)
+}
 
 const types = YAML.parse(await readFile('api/types.yml', 'utf8'))
 
 const out = [`// This is the host-interface exposed to carts
 
-#ifndef NULL0_HOSTAPI_H
-#define NULL0_HOSTAPI_H
-
-#ifndef EMSCRIPTEN
-cvector_vector_type(NativeSymbol) null0_native_symbols = NULL;
-#endif
-
 `]
 
 // map param/return types to C types
 function typeMap(t) {
+  if (['Image', 'Font', 'Sound', 'ImageFilter'].includes(t)) {
+    return 'u32'
+  }
   if (t === 'void') return 'void'
   if (t === 'string' || t.endsWith('[]') || t[0].toUpperCase() === t[0]) return 'u32'
   return t  // use the type directly from yaml (u8, u32, etc)
@@ -28,13 +32,14 @@ function generateBody(fname, func) {
   const params = []
 
   // Handle input parameters
-  for (const [name, type] of Object.entries(func.arguments)) {
-    if (type === 'string') {
+  for (const [name, type] of Object.entries(func.args)) {
+    if (['Image', 'Font', 'Sound', 'ImageFilter'].includes(type)) {
+      params.push(name)
+    } else if (type === 'string') {
       lines.push(`  char* ${name} = copy_from_cart_string(${name}Ptr);`)
       params.push(name)
     } else if (type.endsWith('[]')) {
-      lines.push(`  u8* ${name} = copy_from_cart(${name}Ptr, ${name}Len);`)
-      // Only add length param once
+      lines.push(`  ${type.replace('[]', '')}* ${name} = copy_from_cart(${name}Ptr, ${name}Len);`)
       params.push(name, `${name}Len`)
     } else if (type[0].toUpperCase() === type[0]) {
       lines.push(`  ${type}* ${name} = copy_from_cart(${name}Ptr, sizeof(${type}));`)
@@ -85,40 +90,36 @@ for (const [tname, type] of Object.entries(types)) {
 }
 
 // Output function definitions
-for (const f of await glob('api/*.yml')) {
-  if (f === 'api/types.yml') continue
-  const api = YAML.parse(await readFile(f, 'utf8'))
-  const apiName = f.split('/').pop().split('.')[0]
-  out.push(`// ${apiName.toUpperCase()} API\n`)
+const api = YAML.parse(await readFile(yamlfile, 'utf8'))
+const apiName = yamlfile.split('/').pop().split('.')[0]
+out.push(`// ${apiName.toUpperCase()} API\n`)
 
-  for (const [fname, func] of Object.entries(api)) {
-    out.push(`// ${func.description}`)
+for (const [fname, func] of Object.entries(api)) {
+  out.push(`// ${func.description}`)
 
-    // Convert arguments to include Ptr for pointer types
-    const args = Object.entries(func.arguments).map(([name, type]) => {
-      if (type === 'string') {
-        return `${typeMap(type)} ${name}Ptr`
-      }
-      if (type.endsWith('[]')) {
-        // Don't add length parameter here if it's already in the arguments
-        const hasLengthParam = Object.entries(func.arguments).some(([n, t]) => n === `${name}Len`)
-        const parts = [`${typeMap(type)} ${name}Ptr`]
-        if (!hasLengthParam) parts.push(`${typeMap('u32')} ${name}Len`)
-        return parts.join(', ')
-      }
-      if (type[0].toUpperCase() === type[0]) {
-        return `${typeMap(type)} ${name}Ptr`
-      }
-      return `${typeMap(type)} ${name}${type.endsWith('*') ? 'Ptr' : ''}`
-    }).join(', ')
+  // Convert arguments to include Ptr for pointer types
+  const args = Object.entries(func.args).map(([name, type]) => {
+    if (type === 'string') {
+      return `${typeMap(type)} ${name}Ptr`
+    }
+    if (type.endsWith('[]')) {
+      // Don't add length parameter here if it's already in the arguments
+      const hasLengthParam = Object.entries(func.args).some(([n, t]) => n === `${name}Len`)
+      const parts = [`${typeMap(type)} ${name}Ptr`]
+      if (!hasLengthParam) parts.push(`${typeMap('u32')} ${name}Len`)
+      return parts.join(', ')
+    }
+    if (type[0].toUpperCase() === type[0]) {
+      return `${typeMap(type)} ${name}Ptr`
+    }
+    return `${typeMap(type)} ${name}${type.endsWith('*') ? 'Ptr' : ''}`
+  }).join(', ')
 
-    const returnType = typeMap(func.returns)
-    out.push(`HOST_FUNCTION(${returnType}, ${fname}, (${args}), {`)
-    out.push(generateBody(fname, func))
-    out.push('})\n')
-  }
+  const returnType = typeMap(func.returns)
+  out.push(`HOST_FUNCTION(${returnType}, ${fname}, (${args}), {`)
+  out.push(generateBody(fname, func))
+  out.push('})\n')
 }
 
-out.push('#endif // NULL0_HOSTAPI_H')
 
 console.log(out.join('\n'))

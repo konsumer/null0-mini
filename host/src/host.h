@@ -13,9 +13,6 @@
 #define FS_IMPLEMENTATION
 #include "fs.h"
 
-#define CVECTOR_LOGARITHMIC_GROWTH
-#include "cvector.h"
-
 // simplified type-names
 typedef uint8_t u8;
 typedef uint16_t u16;

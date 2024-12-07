@@ -1,13 +1,13 @@
 trace:
   description: print a string
   returns: void
-  arguments:
+  args:
     str: string
 
 abort:
   description: a fatal exit
   returns: void
-  arguments:
+  args:
     message: string
     filename: string
     line: u32

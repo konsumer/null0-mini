@@ -6,10 +6,19 @@
 #define PNTR_PIXELFORMAT_ARGB
 #endif
 
+#define PNTR_ENABLE_DEFAULT_FONT
 #define PNTR_IMPLEMENTATION
 #include "pntr.h"
 
+#define CVECTOR_LOGARITHMIC_GROWTH
+#include "cvector.h"
+
 pntr_image* screen;
+cvector_vector_type(pntr_image*) images = NULL;
+cvector_vector_type(pntr_font*) fonts = NULL;
+
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
 
 #include "host.h"
 
@@ -37,15 +46,19 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  screen = pntr_new_image(640, 480);
+  screen = pntr_new_image(SCREEN_WIDTH, SCREEN_HEIGHT);
+  cvector_push_back(images, screen);
+  cvector_push_back(fonts, pntr_load_font_default());
 
   #ifdef EMSCRIPTEN
     emscripten_set_main_loop(wasm_host_update, 60, false);
   #else
     #include <MiniFB.h>
-    struct mfb_window* null0_window = mfb_open("null0", 640, 480);
+    struct mfb_window* null0_window = mfb_open("null0", SCREEN_WIDTH, SCREEN_HEIGHT);
+    mfb_set_target_fps(60);
+
     while(null0_window) {
-      if (mfb_update_ex(null0_window, screen->data, 640, 480 ) != STATE_OK) {
+      if (mfb_update_ex(null0_window, screen->data, SCREEN_WIDTH, SCREEN_HEIGHT) != STATE_OK) {
         null0_window = NULL;
       } else {
         wasm_host_update();
