@@ -57,7 +57,9 @@ int main() {
   draw_circle_on_image(duck, 110, 30, 10, BLACK);
   draw_ellipse_on_image(duck, 100, 70, 50, 10, ORANGE);
   draw_line_on_image(duck, 55, 70, 145, 70, RED);
-  draw_text_on_image(duck, 0, "quack!", 140, 0, WHITE);
+  
+  // this is segfaulting on native
+  // draw_text_on_image(duck, 0, "quack!", 140, 0, WHITE);
 
   return 0;
 }
