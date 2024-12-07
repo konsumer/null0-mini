@@ -44,6 +44,9 @@ bool fs_save_file_real(char* filename, unsigned char* data, uint32_t byteSize);
 // save a file to physfs filesystem
 bool fs_save_file(char* filename, unsigned char* data, uint32_t byteSize);
 
+// append to a file in physfs filesystem
+bool fs_append_file(char* filename, unsigned char* data, uint32_t byteSize);
+
 // just detect filetype from first 4 bytes
 DetectFileType fs_parse_magic_bytes(uint32_t magic_number);
 
@@ -218,6 +221,16 @@ bool fs_save_file_real(char* filename, unsigned char* data, uint32_t byteSize) {
 // save a file to physfs filesystem
 bool fs_save_file(char* filename, unsigned char* data, uint32_t byteSize) {
   PHYSFS_File* f = PHYSFS_openWrite(filename);
+  PHYSFS_sint64 bytesWritten = PHYSFS_writeBytes(f, data, byteSize);
+  PHYSFS_close(f);
+  if (byteSize != bytesWritten) {
+    return false;
+  }
+  return true;
+}
+
+bool fs_append_file(char* filename, unsigned char* data, uint32_t byteSize) {
+  PHYSFS_File* f = PHYSFS_openAppend(filename);
   PHYSFS_sint64 bytesWritten = PHYSFS_writeBytes(f, data, byteSize);
   PHYSFS_close(f);
   if (byteSize != bytesWritten) {

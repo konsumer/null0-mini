@@ -9,10 +9,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-
-#define FS_IMPLEMENTATION
-#include "fs.h"
-
 // simplified type-names
 typedef uint8_t u8;
 typedef uint16_t u16;

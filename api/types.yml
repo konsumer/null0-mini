@@ -1,5 +1,0 @@
-TestPoint:
-  description: Used to test passing structs over wasm-barrier
-  properties:
-    x: u32
-    y: u32

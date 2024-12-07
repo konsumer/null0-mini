@@ -1,5 +1,11 @@
 // host implementations for emscripten/wamr
 
+#define FS_IMPLEMENTATION
+#include "fs.h"
+
+#define PNTR_LOAD_FILE fs_load_file
+#define PNTR_SAVE_FILE fs_save_file
+
 #ifdef EMSCRIPTEN
 #define PNTR_PIXELFORMAT_RGBA
 #else

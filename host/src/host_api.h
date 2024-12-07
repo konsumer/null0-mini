@@ -567,5 +567,58 @@ HOST_FUNCTION(void, draw_rectangle_rounded_outline_on_image, (u32 destinationPtr
   pntr_draw_rectangle_rounded(images[destinationPtr], x, y, width, height, cornerRadius, cornerRadius, cornerRadius, cornerRadius, color);
 })
 
+// FILESYSTEM API
+
+// Read a file from cart (or local persistant)
+HOST_FUNCTION(u32, file_read, (u32 filenamePtr, u32 bytesReadPtr), {
+  char* filename = copy_from_cart_string(filenamePtr);
+  u32 outLen = 0;
+  u8* returnVal = pntr_load_file(filename, &outLen);
+  copy_to_cart_with_pointer(bytesReadPtr, &outLen, sizeof(outLen));
+  return copy_to_cart(returnVal, outLen);
+})
+
+// Write a file to persistant storage
+HOST_FUNCTION(bool, file_write, (u32 filenamePtr, u32 dataPtr, u32 byteSize), {
+  char* filename = copy_from_cart_string(filenamePtr);
+  u8* data = copy_from_cart(dataPtr, byteSize);
+  return fs_save_file(filename, data, byteSize);
+})
+
+// Write a file to persistant storage, appending to the end
+HOST_FUNCTION(bool, file_append, (u32 filenamePtr, u32 dataPtr, u32 dataLen, u32 byteSize), {
+  char* filename = copy_from_cart_string(filenamePtr);
+  u8* data = copy_from_cart(dataPtr, byteSize);
+  return fs_append_file(filename, data, byteSize);
+})
+
+// Get info about a single file
+HOST_FUNCTION(u32, file_info, (u32 filenamePtr), {
+  char* filename = copy_from_cart_string(filenamePtr);
+  PHYSFS_Stat result = fs_file_info(filename);
+  return copy_to_cart(&result, sizeof(result));
+})
+
+// Get list of files in a directory
+HOST_FUNCTION(u32, file_list, (u32 dirPtr, u32 countPtr), {
+  char* dir = copy_from_cart_string(dirPtr);
+  cvector_vector_type(char*) returnVal = NULL;
+  char** rc = PHYSFS_enumerateFiles(dir);
+  char** i;
+  u32 outLen = 0;
+  for (i = rc; *i != NULL; i++){
+    outLen++;
+    cvector_push_back(returnVal, *i);
+  }
+  PHYSFS_freeList(rc);
+  copy_to_cart_with_pointer(countPtr, &outLen, sizeof(outLen));
+  return copy_to_cart(returnVal, cvector_size(returnVal));
+})
+
+// Get the user's writable dir (where file writes or appends go)
+HOST_FUNCTION(u32, get_write_dir, (), {
+  return copy_to_cart_string(PHYSFS_getWriteDir());
+})
+
 
 

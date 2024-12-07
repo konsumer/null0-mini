@@ -10,12 +10,7 @@ if (!yamlfile) {
   console.error(`Usage: ${basename(progname)} <YAML_FILE>`)
   process.exit(1)
 }
-
-const types = YAML.parse(await readFile('api/types.yml', 'utf8'))
-
-const out = [`// This is the host-interface exposed to carts
-
-`]
+const out = []
 
 // map param/return types to C types
 function typeMap(t) {
@@ -77,16 +72,6 @@ function generateBody(fname, func) {
   }
 
   return lines.join('\n')
-}
-
-// Output struct definitions
-for (const [tname, type] of Object.entries(types)) {
-  out.push(`// ${type.description}`)
-  out.push(`typedef struct {`)
-  for (const [pname, ptype] of Object.entries(type.properties)) {
-    out.push(`  ${typeMap(ptype)} ${pname};`)
-  }
-  out.push(`} ${tname};\n`)
 }
 
 // Output function definitions
